@@ -1,0 +1,4 @@
+05 2 * * * root /usr/bin/vacuumdb -z zabbix -U postgres 2>&1 | logger -t zabbix-server -p cron.notice
+35 2 * * * root /usr/bin/reindexdb zabbix -U postgres 2>&1 | logger -t zabbix-server -p cron.notice
+45 2 * * * root /usr/bin/find /var/lib/pgsql/data/pg_log -mtime +6 -exec rm {} \; > /dev/null
+
