@@ -1,0 +1,5 @@
+check process zabbix-server with pidfile /var/run/zabbix/zabbix_server.pid
+start program = "/etc/init.d/zabbix-server start"
+stop program = "/etc/init.d/zabbix-server stop"
+if failed port 10051 then restart
+if 5 restarts within 5 cycles then timeout

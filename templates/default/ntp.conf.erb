@@ -1,0 +1,16 @@
+tinker panic 0
+driftfile /var/lib/ntp/ntp.drift
+
+restrict default kod notrap nomodify nopeer noquery
+restrict 127.0.0.1 nomodify
+restrict -6 default kod notrap nomodify nopeer noquery
+restrict -6 ::1 nomodify
+
+<% node['ntp']['servers'].each do |ntpserver| -%>
+server <%= ntpserver %>
+<% end -%>
+server  127.127.1.0 # local clock
+fudge   127.127.1.0 stratum 10
+keys /etc/ntp/keys
+
+

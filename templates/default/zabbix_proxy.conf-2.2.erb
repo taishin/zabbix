@@ -12,7 +12,7 @@
 # Mandatory: no
 # Default:
 # ProxyMode=0
-ProxyMode=0
+ProxyMode=1
 
 ### Option: Server
 #	IP address (or hostname) of Zabbix server.
@@ -22,8 +22,6 @@ ProxyMode=0
 # Mandatory: yes (if ProxyMode is set to 0)
 # Default:
 # Server=
-
-Server=<%= node['zabbix-proxy']['server'] %>
 
 ### Option: ServerPort
 #	Port of Zabbix trapper on Zabbix server.

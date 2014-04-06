@@ -6,6 +6,9 @@
 #
 # All rights reserved - Do Not Redistribute
 #
+
+include_recipe "zabbix::default"
+
 node['zabbix']['server']['packages'].each do |pkg|
   package pkg do
     if node['zabbix']['version']['full']
@@ -15,12 +18,47 @@ node['zabbix']['server']['packages'].each do |pkg|
   end
 end
 
-node['zabbix']['other']['packages'].each do |pkg|
-  package pkg do
+case node[:platform]
+when "redhat", "centos", "fedora"
+	node['zabbix']['other']['packages'].each do |pkg|
+  	package pkg do
+    	action :install
+  	end
+	end
+
+  cookbook_file "#{Chef::Config[:file_cache_path]}/ruby-2.1.1-1.el6.x86_64.rpm" do
+    source "ruby-2.1.1-1.el6.x86_64.rpm"
+  end
+
+  rpm_package "ruby" do
     action :install
+    source "#{Chef::Config[:file_cache_path]}/ruby-2.1.1-1.el6.x86_64.rpm"
   end
 end
 
+node['zabbix']['server']['gems'].each do |pkg|
+	gem_package "#{pkg}" do
+		if pkg == "zbxapi" then
+			version "0.3.5"
+		end
+    action :install
+    options("--no-ri --no-rdoc")
+  end
+end
+
+
+git "#{Chef::Config[:file_cache_path]}/zabbix-api" do
+	repository "https://github.com/taishin/zabbix-api.git"
+	reference "master"
+	action :checkout
+end
+
+bash "exec zbxapi" do
+	cwd "#{Chef::Config[:file_cache_path]}/zabbix-api"
+	code <<-EOC
+	  find . -name "*.rb" -exec ruby {} \\;
+	EOC
+end
 
 execute "selinux" do
   command "/usr/sbin/setenforce 0"

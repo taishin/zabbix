@@ -1,0 +1,11 @@
+check process snmptrapd with pidfile /var/run/snmptrapd.pid
+start program = "/etc/init.d/snmptrapd start"
+stop program = "/etc/init.d/snmptrapd stop"
+if failed port 162 type udp then restart
+if 5 restarts within 5 cycles then timeout
+
+
+check process snmptt with pidfile /var/run/snmptt.pid
+start program = "/etc/init.d/snmptt start"
+stop program = "/etc/init.d/snmptt stop"
+if 5 restarts within 5 cycles then timeout

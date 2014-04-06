@@ -18,12 +18,10 @@ default['zabbix']['server']['packages'] = %w{
 	zabbix-web-pgsql
 }
 
+
 default['zabbix']['other']['packages'] = %w{
 	git
-	snmptt
 	crontabs
-	net-snmp-utils
-	net-snmp-perl
 	ntp
 	tcpdump
 	telnet
@@ -31,6 +29,56 @@ default['zabbix']['other']['packages'] = %w{
 	bind-utils
 	man
 	postgresql-server
+	system-config-network-tui
+	mlocate
+	zlib-devel
+	gcc
+	make
+	zip
 }
 
+default['zabbix']['server']['gems'] = %w{
+	zbxapi
+	zipruby
+}
 
+default['zabbix']['snmp']['packages'] = %w{
+        snmptt
+        net-snmp-utils
+        net-snmp-perl
+}
+
+default['zabbix']['snmp']['mibpath'] = "/usr/share/snmp/mibs"
+
+default['zabbix']['java']['packages'] = %w{
+        zabbix-java-gateway
+}
+
+default['zabbix']['proxy']['packages'] = %w{
+        zabbix-proxy-pgsql
+}
+
+default['zabbix']['full']['packages'] = %w{
+        monit
+}
+
+default['zabbix']['full']['gems'] = %w{
+	nokogiri
+	thinreports
+	mail
+}
+
+default['ntp']['servers'] = %w{ntp.nict.jp}
+case platform
+  when "redhat", "centos", "fedora"
+    default['ntp']['service'] = "ntpd"
+  when "ubuntu"
+    default['ntp']['service'] = "ntp"
+end
+
+default['monit']['mailserver'] = "localhost"
+default['monit']['fromaddress'] = "from@example.com"
+default['monit']['toaddress'] = %w{
+	test1@example.com
+	test2@example.com
+}

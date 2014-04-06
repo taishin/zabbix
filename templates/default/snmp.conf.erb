@@ -1,4 +1,4 @@
-mibdirs /usr/share/snmp/mibs:/usr/share/snmp/mibs/vendor/cisco:/usr/share/snmp/mibs/vendor/esx:/usr/share/snmp/mibs/vendor/netapp:/usr/share/snmp/mibs/vendor/ibm:/usr/share/snmp/mibs/vendor/netscaler:/usr/share/snmp/mibs/vendor/hp:/usr/share/snmp/mibs/vendor/clusterpro
+mibdirs <%= node['zabbix']['snmp']['mibpath'] %>:<%= node['zabbix']['snmp']['mibpath'] %>/vendor_mibs
 mibs all
 #defVersion 3
 #defSecurityLevel authPriv

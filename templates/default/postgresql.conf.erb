@@ -104,7 +104,7 @@ max_connections = 200			# (change requires restart)
 
 # - Memory -
 
-shared_buffers = 512MB			# min 128kB
+shared_buffers = <%= node[:memory][:total].gsub(/kB/,'').to_i / 4 %>kB			# min 128kB
 					# (change requires restart)
 temp_buffers = 50MB			# min 800kB
 #max_prepared_transactions = 0		# zero disables the feature

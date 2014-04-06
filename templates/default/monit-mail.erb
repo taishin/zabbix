@@ -1,0 +1,14 @@
+set mailserver <%= node['monit']['mailserver'] %>
+set mail-format {
+from: <%= node['monit']['fromaddress'] %>
+subject: $HOST : $SERVICE - $EVENT
+message: Monit
+ACTION  : $ACTION
+SERVICE : $SERVICE
+at $DATE on $HOST.
+DESCRIPTION : $DESCRIPTION
+}
+
+<% node['monit']['toaddress'].each do |to| %>
+set alert <%= "#{to}" %>
+<% end %>

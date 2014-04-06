@@ -1,0 +1,5 @@
+check process zabbix-agent with pidfile /var/run/zabbix/zabbix_agentd.pid
+start program = "/etc/init.d/zabbix-agent start"
+stop program = "/etc/init.d/zabbix-agent stop"
+if failed port 10050 then restart
+if 5 restarts within 5 cycles then timeout
