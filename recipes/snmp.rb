@@ -21,7 +21,6 @@ end
 
 
 bash "create snmptt.conf for vendor mibs" do
-	cwd "#{Chef::Config[:file_cache_path]}/zabbix-api"
 	code <<-EOC
 	  CONF=/etc/snmp/snmptt.conf.vendors
 	  TMPFILE=#{Chef::Config[:file_cache_path]}/snmptt.conf.vendors.tmp
