@@ -1,5 +1,5 @@
 default['zabbix']['version']['major'] = "2.2"
-default['zabbix']['version']['full'] = "2.2.0-1"
+# default['zabbix']['version']['full'] = "2.2.0-1"
 default['zabbix']['packages'] = %w{
 	zabbix
 	zabbix-agent
