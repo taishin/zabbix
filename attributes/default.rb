@@ -56,6 +56,7 @@ default['zabbix']['java']['packages'] = %w{
 }
 
 default['zabbix']['proxy']['packages'] = %w{
+	zabbix-get
         zabbix-proxy-pgsql
 }
 
