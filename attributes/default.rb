@@ -35,6 +35,7 @@ default['zabbix']['other']['packages'] = %w{
 	gcc
 	make
 	zip
+	libyaml
 }
 
 default['zabbix']['server']['gems'] = %w{
