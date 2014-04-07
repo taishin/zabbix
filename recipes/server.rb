@@ -149,6 +149,15 @@ service "httpd" do
   action [ :enable, :start ]
 end
 
+service "iptables" do
+  supports :status => true, :restart => true, :reload => true
+  action [ :disable, :stop ]
+end
+
+service "ip6tables" do
+  supports :status => true, :restart => true, :reload => true
+  action [ :disable, :stop ]
+end
 
 git "#{Chef::Config[:file_cache_path]}/zabbix-api" do
 	repository "https://github.com/taishin/zabbix-api.git"
@@ -162,15 +171,3 @@ bash "exec zbxapi" do
 	  find . -name "*.rb" -exec ruby {} \\;
 	EOC
 end
-
-
-service "iptables" do
-  supports :status => true, :restart => true, :reload => true
-  action [ :disable, :stop ]
-end
-
-service "ip6tables" do
-  supports :status => true, :restart => true, :reload => true
-  action [ :disable, :stop ]
-end
-
