@@ -46,20 +46,6 @@ node['zabbix']['server']['gems'].each do |pkg|
   end
 end
 
-
-git "#{Chef::Config[:file_cache_path]}/zabbix-api" do
-	repository "https://github.com/taishin/zabbix-api.git"
-	reference "master"
-	action :checkout
-end
-
-bash "exec zbxapi" do
-	cwd "#{Chef::Config[:file_cache_path]}/zabbix-api"
-	code <<-EOC
-	  find . -name "*.rb" -exec ruby {} \\;
-	EOC
-end
-
 execute "selinux" do
   command "/usr/sbin/setenforce 0"
   only_if { `/usr/sbin/getenforce` =~ /Enforcing/ }
@@ -162,6 +148,21 @@ service "httpd" do
   supports :status => true, :restart => true, :reload => true
   action [ :enable, :start ]
 end
+
+
+git "#{Chef::Config[:file_cache_path]}/zabbix-api" do
+	repository "https://github.com/taishin/zabbix-api.git"
+	reference "master"
+	action :checkout
+end
+
+bash "exec zbxapi" do
+	cwd "#{Chef::Config[:file_cache_path]}/zabbix-api"
+	code <<-EOC
+	  find . -name "*.rb" -exec ruby {} \\;
+	EOC
+end
+
 
 service "iptables" do
   supports :status => true, :restart => true, :reload => true
