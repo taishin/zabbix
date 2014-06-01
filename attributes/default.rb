@@ -19,6 +19,10 @@ default['zabbix']['server']['packages'] = %w{
 }
 
 
+default['zabbix']['other']['packages']['rhel'] = %w{
+  system-config-network-tui
+}
+
 default['zabbix']['other']['packages'] = %w{
 	git
 	crontabs
@@ -29,7 +33,6 @@ default['zabbix']['other']['packages'] = %w{
 	bind-utils
 	man
 	postgresql-server
-	system-config-network-tui
 	mlocate
 	zlib-devel
 	gcc

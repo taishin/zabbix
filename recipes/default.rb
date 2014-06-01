@@ -28,6 +28,19 @@ when "redhat", "centos", "fedora"
   end
 end
 
+case node[:platform]
+when "amazon"
+
+  remote_file "#{Chef::Config[:file_cache_path]}/zabbix-release-#{node['zabbix']['version']['major']}-1.noarch.rpm" do
+    source "http://repo.zabbix.com/zabbix/#{node['zabbix']['version']['major']}/rhel/6/#{node[:kernel][:machine]}/zabbix-release-#{node['zabbix']['version']['major']}-1.el6.noarch.rpm"
+  end
+
+  rpm_package "zabbix-release" do
+    action :install
+    source "#{Chef::Config[:file_cache_path]}/zabbix-release-#{node['zabbix']['version']['major']}-1.noarch.rpm"
+  end
+end
+
 node['zabbix']['packages'].each do |pkg|
   package pkg do
     if node['zabbix']['version']['full']

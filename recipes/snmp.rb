@@ -9,6 +9,7 @@
 node['zabbix']['snmp']['packages'].each do |pkg|
   package pkg do
     action :install
+    options "--enablerepo=epel"
   end
 end
 

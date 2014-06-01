@@ -9,18 +9,18 @@
 
 include_recipe "zabbix::default"
 
-node['zabbix']['server']['packages'].each do |pkg|
-  package pkg do
-    if node['zabbix']['version']['full']
-      version "#{node['zabbix']['version']['full']}.el#{node[:platform_version].to_i}"
-    end
-    action :install
-  end
-end
-
 case node[:platform]
 when "redhat", "centos", "fedora"
-	node['zabbix']['other']['packages'].each do |pkg|
+  node['zabbix']['server']['packages'].each do |pkg|
+    package pkg do
+      if node['zabbix']['version']['full']
+        version "#{node['zabbix']['version']['full']}.el#{node[:platform_version].to_i}"
+      end
+      action :install
+    end
+  end
+
+	node['zabbix']['other']['packages']['rhel'].each do |pkg|
   	package pkg do
     	action :install
   	end
@@ -34,6 +34,49 @@ when "redhat", "centos", "fedora"
     action :install
     source "#{Chef::Config[:file_cache_path]}/ruby-2.1.1-1.el6.x86_64.rpm"
   end
+
+  execute "selinux" do
+    command "/usr/sbin/setenforce 0"
+    only_if { `/usr/sbin/getenforce` =~ /Enforcing/ }
+  end
+
+  template "/etc/selinux/config" do
+    source "config.erb"
+    owner "root"
+    mode 0644
+  end
+  pgsql_path = "/var/lib/pgsql"
+  httpd_conf_template = "httpd.conf.erb"
+end
+
+case node[:platform]
+when "amazon"
+  node['zabbix']['server']['packages'].each do |pkg|
+    package pkg do
+      if node['zabbix']['version']['full']
+        version "#{node['zabbix']['version']['full']}.el6"
+      end
+      action :install
+    end
+  end
+
+  package "ruby19-devel" do
+    action :install
+  end
+
+  execute "alternatives-ruby" do
+    command "/usr/sbin/alternatives --set ruby /usr/bin/ruby1.9"
+  end
+
+  pgsql_path = "/var/lib/pgsql9"
+  httpd_conf_template = "httpd.conf.azn.erb"
+
+end
+
+node['zabbix']['other']['packages'].each do |pkg|
+  package pkg do
+    action :install
+  end
 end
 
 node['zabbix']['server']['gems'].each do |pkg|
@@ -46,29 +89,20 @@ node['zabbix']['server']['gems'].each do |pkg|
   end
 end
 
-execute "selinux" do
-  command "/usr/sbin/setenforce 0"
-  only_if { `/usr/sbin/getenforce` =~ /Enforcing/ }
-end
 
-template "/etc/selinux/config" do
-  source "config.erb"
-  owner "root"
-  mode 0644
-end
 
 
 execute "/sbin/service postgresql initdb" do
-  not_if { ::FileTest.exist?("/var/lib/pgsql/data/postgresql.conf") }
+  not_if { ::FileTest.exist?("#{pgsql_path}/data/postgresql.conf") }
 end
 
-template "/var/lib/pgsql/data/pg_hba.conf" do
+template "#{pgsql_path}/data/pg_hba.conf" do
   source "pg_hba.conf.erb"
   owner "postgres"
   mode 0600
 end
 
-template "/var/lib/pgsql/data/postgresql.conf" do
+template "#{pgsql_path}/data/postgresql.conf" do
   source "postgresql.conf.erb"
   owner "postgres"
   mode 0600
@@ -133,11 +167,21 @@ template "/etc/php.ini" do
 end
 
 template "/etc/httpd/conf/httpd.conf" do
-  source "httpd.conf.erb"
+  source httpd_conf_template
   owner "root"
   notifies :restart, "service[httpd]"
   mode 0644
 end
+
+if node[:platform] == "amazon"
+  template "/etc/httpd/conf.d/zabbix.conf" do
+    source "zabbix.conf.erb"
+    owner "root"
+    notifies :restart, "service[httpd]"
+    mode 0644
+  end
+end
+
 
 service "zabbix-server" do
   supports :status => true, :restart => true, :reload => true

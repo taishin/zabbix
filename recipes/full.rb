@@ -12,12 +12,21 @@ include_recipe "zabbix::server"
 include_recipe "zabbix::snmp"
 include_recipe "zabbix::java"
 
+node['zabbix']['full']['packages'].each do |pkg|
+  package "#{pkg}" do
+    action :install
+  end
+end
+
 case node[:platform]
 when "redhat", "centos", "fedora"
 
-  node['zabbix']['full']['packages'].each do |pkg|
-    package "#{pkg}" do
+
+
+  node['zabbix']['full']['gems'].each do |pkg|
+    gem_package "#{pkg}" do
       action :install
+      options("--no-ri --no-rdoc")
     end
   end
 
@@ -28,25 +37,36 @@ when "redhat", "centos", "fedora"
   service "avahi-daemon" do
     action [ :disable, :stop ]
   end
-end
 
-node['zabbix']['full']['gems'].each do |pkg|
-  gem_package "#{pkg}" do
+  template "/etc/ntp.conf" do
+    source "ntp.conf.erb"
+    notifies :restart, "service[#{node['ntp']['service']}]"
+  end
+
+  service node['ntp']['service'] do
+    action [:enable, :start]
+  end
+
+when "amazon"
+  package "libxml2-devel" do
     action :install
-    options("--no-ri --no-rdoc")
+  end
+
+  package "libxslt-devel" do
+    action :install
+  end
+
+  node['zabbix']['full']['gems'].each do |pkg|
+    gem_package "#{pkg}" do
+      action :install
+      options("--no-ri --no-rdoc -- --use-system-libraries=ture")
+    end
   end
 end
 
 
 
-template "/etc/ntp.conf" do
-  source "ntp.conf.erb"
-  notifies :restart, "service[#{node['ntp']['service']}]"
-end
 
-service node['ntp']['service'] do
-  action [:enable, :start]
-end
 
 service "monit" do
   supports :status => true, :restart => true, :reload => true
