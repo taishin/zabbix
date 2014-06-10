@@ -20,7 +20,7 @@ when "redhat", "centos", "fedora"
     end
   end
 
-	node['zabbix']['other']['packages']['rhel'].each do |pkg|
+	node['zabbix']['other']['packages'].each do |pkg|
   	package pkg do
     	action :install
   	end
