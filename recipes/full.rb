@@ -26,7 +26,7 @@ when "redhat", "centos", "fedora"
   node['zabbix']['full']['gems'].each do |pkg|
     gem_package "#{pkg}" do
       action :install
-      options("--no-ri --no-rdoc")
+      options("--no-ri --no-rdoc -- --use-system-libraries=ture")
     end
   end
 
