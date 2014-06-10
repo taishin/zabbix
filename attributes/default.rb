@@ -39,6 +39,8 @@ default['zabbix']['other']['packages'] = %w{
 	make
 	zip
 	libyaml
+	libxslt-devel
+	libxml2-devel
 }
 
 default['zabbix']['server']['gems'] = %w{
