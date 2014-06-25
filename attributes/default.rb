@@ -84,8 +84,7 @@ case platform
 end
 
 default['monit']['mailserver'] = "localhost"
-default['monit']['fromaddress'] = "from@example.com"
+default['monit']['fromaddress'] = "monit@localhost"
 default['monit']['toaddress'] = %w{
-	test1@example.com
-	test2@example.com
+	root
 }
