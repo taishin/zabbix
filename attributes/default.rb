@@ -86,5 +86,5 @@ end
 default['monit']['mailserver'] = "localhost"
 default['monit']['fromaddress'] = "monit@localhost"
 default['monit']['toaddress'] = %w{
-	root
+	root@localhost
 }
