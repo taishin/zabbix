@@ -4,15 +4,6 @@
 
 ############ GENERAL PARAMETERS #################
 
-### Option: NodeID
-#	Unique NodeID in distributed setup.
-#	0 - standalone server
-#
-# Mandatory: no
-# Range: 0-999
-# Default:
-# NodeID=0
-
 ### Option: ListenPort
 #	Listen port for trapper.
 #
@@ -51,7 +42,7 @@ LogFileSize=0
 
 ### Option: DebugLevel
 #	Specifies debug level
-#	0 - no debug
+#	0 - basic information about starting and stopping of Zabbix processes
 #	1 - critical information
 #	2 - error information
 #	3 - warnings
@@ -91,7 +82,7 @@ PidFile=/var/run/zabbix/zabbix_server.pid
 DBName=zabbix
 
 ### Option: DBSchema
-#	Schema name. Used for IBM DB2.
+#	Schema name. Used for IBM DB2 and PostgreSQL.
 #
 # Mandatory: no
 # Default:
@@ -150,7 +141,9 @@ DBSocket=/var/lib/mysql/mysql.sock
 # StartIPMIPollers=0
 
 ### Option: StartPollersUnreachable
-#	Number of pre-forked instances of pollers for unreachable hosts (including IPMI).
+#	Number of pre-forked instances of pollers for unreachable hosts (including IPMI and Java).
+#	At least one poller for unreachable hosts must be running if regular, IPMI or Java pollers
+#	are started.
 #
 # Mandatory: no
 # Range: 0-1000
@@ -159,8 +152,9 @@ DBSocket=/var/lib/mysql/mysql.sock
 
 ### Option: StartTrappers
 #	Number of pre-forked instances of trappers.
-#	Trappers accept incoming connections from Zabbix sender, active agents, active proxies and child nodes.
-#	At least one trapper process must be running to display server availability in the frontend.
+#	Trappers accept incoming connections from Zabbix sender, active agents and active proxies.
+#	At least one trapper process must be running to display server availability and view queue
+#	in the frontend.
 #
 # Mandatory: no
 # Range: 0-1000
@@ -272,6 +266,7 @@ SNMPTrapperFile=/var/log/snmptt/snmptt.log
 # Mandatory: no
 # Range: 0-1
 # Default:
+# StartSNMPTrapper=0
 StartSNMPTrapper=1
 
 ### Option: ListenIP
@@ -286,7 +281,11 @@ StartSNMPTrapper=1
 
 ### Option: HousekeepingFrequency
 #	How often Zabbix will perform housekeeping procedure (in hours).
-#	Housekeeping is removing unnecessary information from history, alert, and alarms tables.
+#	Housekeeping is removing unnecessary information from history, alert, alarm, and other tables.
+#	To prevent housekeeper from being overloaded (for example, when history and trend periods
+#	are greatly reduced), no more than 4xHousekeepingFrequency hours of outdated history are
+#	deleted in one housekeeping cycle, for each item.
+#	To lower load on server startup housekeeping is postponed for 30 minutes after server start.
 #
 # Mandatory: no
 # Range: 1-24
@@ -319,7 +318,7 @@ StartSNMPTrapper=1
 #	Shared memory size for storing host, item and trigger data.
 #
 # Mandatory: no
-# Range: 128K-2G
+# Range: 128K-8G
 # Default:
 # CacheSize=8M
 
@@ -368,31 +367,13 @@ StartSNMPTrapper=1
 
 ### Option: ValueCacheSize
 #	Size of history value cache, in bytes.
-#	Shared memory size for caching item history data requests
+#	Shared memory size for caching item history data requests.
 #	Setting to 0 disables value cache.
 #
 # Mandatory: no
 # Range: 0,128K-64G
 # Default:
 # ValueCacheSize=8M
-
-### Option: NodeNoEvents
-#	If set to '1' local events won't be sent to master node.
-#	This won't impact ability of this node to propagate events from its child nodes.
-#
-# Mandatory: no
-# Range: 0-1
-# Default:
-# NodeNoEvents=0
-
-### Option: NodeNoHistory
-#	If set to '1' local history won't be sent to master node.
-#	This won't impact ability of this node to propagate history from its child nodes.
-#
-# Mandatory: no
-# Range: 0-1
-# Default:
-# NodeNoHistory=0
 
 ### Option: Timeout
 #	Specifies how long we wait for agent, SNMP device or external check (in seconds).
@@ -523,13 +504,22 @@ ExternalScripts=/usr/lib/zabbix/externalscripts
 
 ### Option: AllowRoot
 #	Allow the server to run as 'root'. If disabled and the server is started by 'root', the server
-#	will try to switch to user 'zabbix' instead. Has no effect if started under a regular user.
+#	will try to switch to the user specified by the User configuration option instead.
+#	Has no effect if started under a regular user.
 #	0 - do not allow
 #	1 - allow
 #
 # Mandatory: no
 # Default:
 # AllowRoot=0
+
+### Option: User
+#	Drop privileges to a specific, existing user on the system.
+#	Only has effect if run as 'root' and AllowRoot is disabled.
+#
+# Mandatory: no
+# Default:
+# User=zabbix
 
 ### Option: Include
 #	You may include individual files or all files in a directory in the configuration file.
@@ -541,6 +531,32 @@ ExternalScripts=/usr/lib/zabbix/externalscripts
 
 # Include=/usr/local/etc/zabbix_server.general.conf
 # Include=/usr/local/etc/zabbix_server.conf.d/
+# Include=/usr/local/etc/zabbix_server.conf.d/*.conf
+
+### Option: SSLCertLocation
+#	Location of SSL client certificates.
+#	This parameter is used only in web monitoring.
+#
+# Mandatory: no
+# Default:
+# SSLCertLocation=${datadir}/zabbix/ssl/certs
+
+### Option: SSLKeyLocation
+#	Location of private keys for SSL client certificates.
+#	This parameter is used only in web monitoring.
+#
+# Mandatory: no
+# Default:
+# SSLKeyLocation=${datadir}/zabbix/ssl/keys
+
+### Option: SSLCALocation
+#	Override the location of certificate authority (CA) files for SSL server certificate verification.
+#	If not set, system-wide directory will be used.
+#	This parameter is used only in web monitoring.
+#
+# Mandatory: no
+# Default:
+# SSLCALocation=
 
 ####### LOADABLE MODULES #######
 

@@ -1,17 +1,55 @@
-# This is a configuration file for Zabbix Server process
+# This is a configuration file for Zabbix Proxy process
 # To get more information about Zabbix,
 # visit http://www.zabbix.com
 
 ############ GENERAL PARAMETERS #################
 
-### Option: NodeID
-#	Unique NodeID in distributed setup.
-#	0 - standalone server
+### Option: ProxyMode
+#	Proxy operating mode
+#	0 - proxy in the active mode
+#	1 - proxy in the passive mode
 #
 # Mandatory: no
-# Range: 0-999
 # Default:
-# NodeID=0
+# ProxyMode=0
+
+### Option: Server
+#	IP address (or hostname) of Zabbix server.
+#	Active proxy will get configuration data from the server.
+#	For a proxy in the passive mode this parameter will be ignored.
+#
+# Mandatory: yes (if ProxyMode is set to 0)
+# Default:
+# Server=
+
+Server=127.0.0.1
+
+### Option: ServerPort
+#	Port of Zabbix trapper on Zabbix server.
+#	For a proxy in the passive mode this parameter will be ignored.
+#
+# Mandatory: no
+# Range: 1024-32767
+# Default:
+# ServerPort=10051
+
+### Option: Hostname
+#	Unique, case sensitive Proxy name. Make sure the Proxy name is known to the server!
+#	Value is acquired from HostnameItem if undefined.
+#
+# Mandatory: no
+# Default:
+# Hostname=
+
+Hostname=<%= node['hostname'] %>
+
+### Option: HostnameItem
+#	Item used for generating Hostname if it is undefined.
+#	Ignored if Hostname is defined.
+#
+# Mandatory: no
+# Default:
+# HostnameItem=system.hostname
 
 ### Option: ListenPort
 #	Listen port for trapper.
@@ -36,7 +74,7 @@
 # Default:
 # LogFile=
 
-LogFile=/var/log/zabbix/zabbix_server.log
+LogFile=/var/log/zabbix/zabbix_proxy.log
 
 ### Option: LogFileSize
 #	Maximum size of log file in MB.
@@ -51,7 +89,7 @@ LogFileSize=0
 
 ### Option: DebugLevel
 #	Specifies debug level
-#	0 - no debug
+#	0 - basic information about starting and stopping of Zabbix processes
 #	1 - critical information
 #	2 - error information
 #	3 - warnings
@@ -67,9 +105,9 @@ LogFileSize=0
 #
 # Mandatory: no
 # Default:
-# PidFile=/tmp/zabbix_server.pid
+# PidFile=/tmp/zabbix_proxy.pid
 
-PidFile=/var/run/zabbix/zabbix_server.pid
+PidFile=/var/run/zabbix/zabbix_proxy.pid
 
 ### Option: DBHost
 #	Database host name.
@@ -83,15 +121,16 @@ PidFile=/var/run/zabbix/zabbix_server.pid
 ### Option: DBName
 #	Database name.
 #	For SQLite3 path to database file must be provided. DBUser and DBPassword are ignored.
+#	Warning: do not attempt to use the same database Zabbix server is using.
 #
 # Mandatory: yes
 # Default:
 # DBName=
 
-DBName=zabbix
+DBName=zabbix_proxy
 
 ### Option: DBSchema
-#	Schema name. Used for IBM DB2.
+#	Schema name. Used for IBM DB2 and PostgreSQL.
 #
 # Mandatory: no
 # Default:
@@ -100,7 +139,6 @@ DBName=zabbix
 ### Option: DBUser
 #	Database user. Ignored for SQLite.
 #
-# Mandatory: no
 # Default:
 # DBUser=
 
@@ -123,13 +161,63 @@ DBUser=zabbix
 
 DBSocket=/var/lib/mysql/mysql.sock
 
-### Option: DBPort
+# Option: DBPort
 #	Database port when not using local socket. Ignored for SQLite.
 #
 # Mandatory: no
-# Range: 1024-65535
 # Default (for MySQL):
 # DBPort=3306
+
+######### PROXY SPECIFIC PARAMETERS #############
+
+### Option: ProxyLocalBuffer
+#	Proxy will keep data locally for N hours, even if the data have already been synced with the server.
+#	This parameter may be used if local data will be used by third party applications.
+#
+# Mandatory: no
+# Range: 0-720
+# Default:
+# ProxyLocalBuffer=0
+
+### Option: ProxyOfflineBuffer
+#	Proxy will keep data for N hours in case if no connectivity with Zabbix Server.
+#	Older data will be lost.
+#
+# Mandatory: no
+# Range: 1-720
+# Default:
+# ProxyOfflineBuffer=1
+ProxyOfflineBuffer=48
+
+### Option: HeartbeatFrequency
+#	Frequency of heartbeat messages in seconds.
+#	Used for monitoring availability of Proxy on server side.
+#	0 - heartbeat messages disabled.
+#	For a proxy in the passive mode this parameter will be ignored.
+#
+# Mandatory: no
+# Range: 0-3600
+# Default:
+# HeartbeatFrequency=60
+
+### Option: ConfigFrequency
+#	How often proxy retrieves configuration data from Zabbix Server in seconds.
+#	For a proxy in the passive mode this parameter will be ignored.
+#
+# Mandatory: no
+# Range: 1-3600*24*7
+# Default:
+# ConfigFrequency=3600
+ConfigFrequency=120
+
+### Option: DataSenderFrequency
+#	Proxy will send collected data to the Server every N seconds.
+#	For a proxy in the passive mode this parameter will be ignored.
+#
+# Mandatory: no
+# Range: 1-3600
+# Default:
+# DataSenderFrequency=1
 
 ############ ADVANCED PARAMETERS ################
 
@@ -150,7 +238,9 @@ DBSocket=/var/lib/mysql/mysql.sock
 # StartIPMIPollers=0
 
 ### Option: StartPollersUnreachable
-#	Number of pre-forked instances of pollers for unreachable hosts (including IPMI).
+#	Number of pre-forked instances of pollers for unreachable hosts (including IPMI and Java).
+#	At least one poller for unreachable hosts must be running if regular, IPMI or Java pollers
+#	are started.
 #
 # Mandatory: no
 # Range: 0-1000
@@ -159,8 +249,7 @@ DBSocket=/var/lib/mysql/mysql.sock
 
 ### Option: StartTrappers
 #	Number of pre-forked instances of trappers.
-#	Trappers accept incoming connections from Zabbix sender, active agents, active proxies and child nodes.
-#	At least one trapper process must be running to display server availability in the frontend.
+#	Trappers accept incoming connections from Zabbix sender and active agents.
 #
 # Mandatory: no
 # Range: 0-1000
@@ -193,16 +282,6 @@ StartDiscoverers=5
 # Default:
 # StartHTTPPollers=1
 
-### Option: StartTimers
-#	Number of pre-forked instances of timers.
-#	Timers process time-based trigger functions and maintenance periods.
-#	Only the first timer process handles the maintenance periods.
-#
-# Mandatory: no
-# Range: 1-1000
-# Default:
-# StartTimers=1
-
 ### Option: JavaGateway
 #	IP address (or hostname) of Zabbix Java gateway.
 #	Only required if Java pollers are started.
@@ -227,7 +306,6 @@ JavaGateway=127.0.0.1
 # Range: 0-1000
 # Default:
 # StartJavaPollers=0
-StartJavaPollers=5
 
 ### Option: StartVMwareCollectors
 #	Number of pre-forked vmware collector instances.
@@ -257,14 +335,12 @@ StartVMwareCollectors=3
 # VMwareCacheSize=8M
 
 ### Option: SNMPTrapperFile
-#	Temporary file used for passing data from SNMP trap daemon to the server.
+#	Temporary file used for passing data from SNMP trap daemon to the proxy.
 #	Must be the same as in zabbix_trap_receiver.pl or SNMPTT configuration file.
 #
 # Mandatory: no
 # Default:
-# SNMPTrapperFile=/tmp/zabbix_traps.tmp
-
-SNMPTrapperFile=/var/log/snmptt/snmptt.log
+SNMPTrapperFile=/tmp/zabbix_traps.tmp
 
 ### Option: StartSNMPTrapper
 #	If 1, SNMP trapper process is started.
@@ -272,6 +348,7 @@ SNMPTrapperFile=/var/log/snmptt/snmptt.log
 # Mandatory: no
 # Range: 0-1
 # Default:
+# StartSNMPTrapper=0
 StartSNMPTrapper=1
 
 ### Option: ListenIP
@@ -282,54 +359,26 @@ StartSNMPTrapper=1
 # Default:
 # ListenIP=0.0.0.0
 
-# ListenIP=127.0.0.1
-
 ### Option: HousekeepingFrequency
 #	How often Zabbix will perform housekeeping procedure (in hours).
-#	Housekeeping is removing unnecessary information from history, alert, and alarms tables.
+#	Housekeeping is removing unnecessary information from proxy history tables.
+#	To prevent housekeeper from being overloaded, no more than 4xHousekeepingFrequency hours
+#	of outdated history are deleted in one housekeeping cycle.
+#	To lower load on proxy startup housekeeping is postponed for 30 minutes after proxy start.
 #
 # Mandatory: no
 # Range: 1-24
 # Default:
 # HousekeepingFrequency=1
 
-### Option: MaxHousekeeperDelete
-#	The table "housekeeper" contains "tasks" for housekeeping procedure in the format:
-#	[housekeeperid], [tablename], [field], [value].
-#	No more than 'MaxHousekeeperDelete' rows (corresponding to [tablename], [field], [value])
-#	will be deleted per one task in one housekeeping cycle.
-#	SQLite3 does not use this parameter, deletes all corresponding rows without a limit.
-#	If set to 0 then no limit is used at all. In this case you must know what you are doing!
-#
-# Mandatory: no
-# Range: 0-1000000
-# Default:
-# MaxHousekeeperDelete=500
-
-### Option: SenderFrequency
-#	How often Zabbix will try to send unsent alerts (in seconds).
-#
-# Mandatory: no
-# Range: 5-3600
-# Default:
-# SenderFrequency=30
-
 ### Option: CacheSize
 #	Size of configuration cache, in bytes.
-#	Shared memory size for storing host, item and trigger data.
+#	Shared memory size, for storing hosts and items data.
 #
 # Mandatory: no
-# Range: 128K-2G
+# Range: 128K-8G
 # Default:
 # CacheSize=8M
-
-### Option: CacheUpdateFrequency
-#	How often Zabbix will perform update of configuration cache, in seconds.
-#
-# Mandatory: no
-# Range: 1-3600
-# Default:
-# CacheUpdateFrequency=60
 
 ### Option: StartDBSyncers
 #	Number of pre-forked instances of DB Syncers
@@ -348,15 +397,6 @@ StartSNMPTrapper=1
 # Default:
 # HistoryCacheSize=8M
 
-### Option: TrendCacheSize
-#	Size of trend cache, in bytes.
-#	Shared memory size for storing trends data.
-#
-# Mandatory: no
-# Range: 128K-2G
-# Default:
-# TrendCacheSize=4M
-
 ### Option: HistoryTextCacheSize
 #	Size of text history cache, in bytes.
 #	Shared memory size for storing character, text or log history data.
@@ -365,34 +405,6 @@ StartSNMPTrapper=1
 # Range: 128K-2G
 # Default:
 # HistoryTextCacheSize=16M
-
-### Option: ValueCacheSize
-#	Size of history value cache, in bytes.
-#	Shared memory size for caching item history data requests
-#	Setting to 0 disables value cache.
-#
-# Mandatory: no
-# Range: 0,128K-64G
-# Default:
-# ValueCacheSize=8M
-
-### Option: NodeNoEvents
-#	If set to '1' local events won't be sent to master node.
-#	This won't impact ability of this node to propagate events from its child nodes.
-#
-# Mandatory: no
-# Range: 0-1
-# Default:
-# NodeNoEvents=0
-
-### Option: NodeNoHistory
-#	If set to '1' local history won't be sent to master node.
-#	This won't impact ability of this node to propagate history from its child nodes.
-#
-# Mandatory: no
-# Range: 0-1
-# Default:
-# NodeNoHistory=0
 
 ### Option: Timeout
 #	Specifies how long we wait for agent, SNMP device or external check (in seconds).
@@ -433,16 +445,6 @@ StartSNMPTrapper=1
 # Range: 1-3600
 # Default:
 # UnreachableDelay=15
-
-### Option: AlertScriptsPath
-#	Full path to location of custom alert scripts.
-#	Default depends on compilation options.
-#
-# Mandatory: no
-# Default:
-# AlertScriptsPath=${datadir}/zabbix/alertscripts
-
-AlertScriptsPath=/usr/lib/zabbix/alertscripts
 
 ### Option: ExternalScripts
 #	Full path to location of external scripts.
@@ -495,41 +497,24 @@ ExternalScripts=/usr/lib/zabbix/externalscripts
 # Default:
 # TmpDir=/tmp
 
-### Option: StartProxyPollers
-#	Number of pre-forked instances of pollers for passive proxies.
-#
-# Mandatory: no
-# Range: 0-250
-# Default:
-# StartProxyPollers=1
-
-### Option: ProxyConfigFrequency
-#	How often Zabbix Server sends configuration data to a Zabbix Proxy in seconds.
-#	This parameter is used only for proxies in the passive mode.
-#
-# Mandatory: no
-# Range: 1-3600*24*7
-# Default:
-# ProxyConfigFrequency=3600
-
-### Option: ProxyDataFrequency
-#	How often Zabbix Server requests history data from a Zabbix Proxy in seconds.
-#	This parameter is used only for proxies in the passive mode.
-#
-# Mandatory: no
-# Range: 1-3600
-# Default:
-# ProxyDataFrequency=1
-
 ### Option: AllowRoot
-#	Allow the server to run as 'root'. If disabled and the server is started by 'root', the server
-#	will try to switch to user 'zabbix' instead. Has no effect if started under a regular user.
+#	Allow the proxy to run as 'root'. If disabled and the proxy is started by 'root', the proxy
+#	will try to switch to the user specified by the User configuration option instead.
+#	Has no effect if started under a regular user.
 #	0 - do not allow
 #	1 - allow
 #
 # Mandatory: no
 # Default:
 # AllowRoot=0
+
+### Option: User
+#	Drop privileges to a specific, existing user on the system.
+#	Only has effect if run as 'root' and AllowRoot is disabled.
+#
+# Mandatory: no
+# Default:
+# User=zabbix
 
 ### Option: Include
 #	You may include individual files or all files in a directory in the configuration file.
@@ -539,13 +524,39 @@ ExternalScripts=/usr/lib/zabbix/externalscripts
 # Default:
 # Include=
 
-# Include=/usr/local/etc/zabbix_server.general.conf
-# Include=/usr/local/etc/zabbix_server.conf.d/
+# Include=/usr/local/etc/zabbix_proxy.general.conf
+# Include=/usr/local/etc/zabbix_proxy.conf.d/
+# Include=/usr/local/etc/zabbix_proxy.conf.d/*.conf
+
+### Option: SSLCertLocation
+#	Location of SSL client certificates.
+#	This parameter is used only in web monitoring.
+#
+# Mandatory: no
+# Default:
+# SSLCertLocation=${datadir}/zabbix/ssl/certs
+
+### Option: SSLKeyLocation
+#	Location of private keys for SSL client certificates.
+#	This parameter is used only in web monitoring.
+#
+# Mandatory: no
+# Default:
+# SSLKeyLocation=${datadir}/zabbix/ssl/keys
+
+### Option: SSLCALocation
+#	Location of certificate authority (CA) files for SSL server certificate verification.
+#	If not set, system-wide directory will be used.
+#	This parameter is used only in web monitoring.
+#
+# Mandatory: no
+# Default:
+# SSLCALocation=
 
 ####### LOADABLE MODULES #######
 
 ### Option: LoadModulePath
-#	Full path to location of server modules.
+#	Full path to location of proxy modules.
 #	Default depends on compilation options.
 #
 # Mandatory: no
@@ -553,7 +564,7 @@ ExternalScripts=/usr/lib/zabbix/externalscripts
 # LoadModulePath=${libdir}/modules
 
 ### Option: LoadModule
-#	Module to load at server startup. Modules are used to extend functionality of the server.
+#	Module to load at proxy startup. Modules are used to extend functionality of the proxy.
 #	Format: LoadModule=<module.so>
 #	The modules must be located in directory specified by LoadModulePath.
 #	It is allowed to include multiple LoadModule parameters.

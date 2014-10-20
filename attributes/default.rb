@@ -1,4 +1,4 @@
-default['zabbix']['version']['major'] = "2.2"
+default['zabbix']['version']['major'] = "2.4"
 # default['zabbix']['version']['full'] = "2.2.0-1"
 default['zabbix']['packages'] = %w{
 	zabbix
@@ -6,7 +6,7 @@ default['zabbix']['packages'] = %w{
 	zabbix-sender
 }
 
-default['zabbix']['agent']['serverip'] = "127.0.0.1"
+default['zabbix']['agent']['serverip'] = "172.24.2.8,10.3.113.8"
 
 
 
@@ -44,12 +44,11 @@ default['zabbix']['other']['packages'] = %w{
 }
 
 default['zabbix']['server']['gems'] = %w{
-	zbxapi
+	zabbix-client	
 	zipruby
 }
 
 default['zabbix']['snmp']['packages'] = %w{
-        snmptt
         net-snmp-utils
         net-snmp-perl
 }

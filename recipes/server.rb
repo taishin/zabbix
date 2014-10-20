@@ -60,13 +60,13 @@ when "amazon"
     end
   end
 
-  package "ruby19-devel" do
+  package "ruby20-devel" do
     action :install
   end
 
-  execute "alternatives-ruby" do
-    command "/usr/sbin/alternatives --set ruby /usr/bin/ruby1.9"
-  end
+#  execute "alternatives-ruby" do
+#    command "/usr/sbin/alternatives --set ruby /usr/bin/ruby1.9"
+#  end
 
   pgsql_path = "/var/lib/pgsql9"
   httpd_conf_template = "httpd.conf.azn.erb"

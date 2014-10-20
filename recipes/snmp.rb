@@ -13,6 +13,12 @@ node['zabbix']['snmp']['packages'].each do |pkg|
   end
 end
 
+if node[:platform] != 'amazon' then
+  package "snmptt" do
+    action :install
+  end
+end
+  
 
 git "#{node['zabbix']['snmp']['mibpath']}/vendor_mibs" do
 	repository "https://github.com/taishin/vendor_mibs.git"
